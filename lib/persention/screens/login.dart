@@ -4,6 +4,7 @@ import 'package:map/const/colors.dart';
 class LoginPage extends StatelessWidget {
    LoginPage({super.key});
 
+   GlobalKey<FormState> globalKey=GlobalKey<FormState>();
   TextEditingController phoneNumber=TextEditingController();
   Widget biuldHightText(){
     return Column(
@@ -24,9 +25,9 @@ class LoginPage extends StatelessWidget {
         Expanded(
           flex: 1,
           child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 12,vertical: 13),
+            padding: EdgeInsets.symmetric(horizontal: 8,vertical: 8),
             decoration: BoxDecoration(
-              border: Border.all(color: MyColors.lightBlue),
+              border: Border.all(color: const Color(0xFFE5EFFD)),
               borderRadius: BorderRadius.circular(10)
             ),
             child: Text(biuldFlage()+" +20",style: TextStyle(fontSize: 20,letterSpacing: 2)),
@@ -42,6 +43,7 @@ class LoginPage extends StatelessWidget {
               borderRadius: BorderRadius.circular(10)
             ),
             child: TextFormField(
+              key: globalKey,
               autofocus: true,
               style: TextStyle(
                 fontSize: 18,
