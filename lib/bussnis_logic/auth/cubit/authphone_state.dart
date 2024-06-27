@@ -1,17 +1,26 @@
 part of 'authphone_cubit.dart';
 
-@immutable
-sealed class AuthphoneState {}
 
-final class AuthphoneInitial extends AuthphoneState {}
+abstract class PhoneAuthState {}
 
-final class Loadding extends AuthphoneCubit{}
+class PhoneAuthInitial extends PhoneAuthState {}
 
-final class ErrorDecrued extends AuthphoneCubit{
-  final String error;
-  ErrorDecrued({required this.error});
+class Loading extends PhoneAuthState {}
+
+class ErrorOccurred extends PhoneAuthState {
+  final String errorMsg;
+
+  ErrorOccurred({required this.errorMsg});
 }
 
-final class PhoneNumberSubmited extends AuthphoneCubit{}
+class PhoneNumberSubmited extends PhoneAuthState{}
 
-final class PhoneOtpVertified extends AuthphoneCubit{}
+class PhoneOTPVerified extends PhoneAuthState{}
+
+class SelectedImage extends PhoneAuthState{
+  final File file;
+  SelectedImage({required this.file});
+}
+
+class UserDataUploaded extends PhoneAuthState{}
+class UserExist extends PhoneAuthState{}

@@ -1,96 +1,193 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:map/bussnis_logic/auth/cubit/authphone_cubit.dart';
 import 'package:map/const/colors.dart';
+import 'package:map/const/rout_name.dart';
 
-class LoginPage extends StatelessWidget {
-   LoginPage({super.key});
+class LoginScreen extends StatelessWidget {
+  LoginScreen({Key? key}) : super(key: key);
 
-   GlobalKey<FormState> globalKey=GlobalKey<FormState>();
-  TextEditingController phoneNumber=TextEditingController();
-  Widget biuldHightText(){
+  final GlobalKey<FormState> _phoneFormKey = GlobalKey();
+
+  late String phoneNumber;
+
+  Widget _buildIntroTexts() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("What Is Your Phone Number",style: TextStyle(fontSize: 20,color: Colors.black),),
-        SizedBox(height: 30,),
+        Text(
+          'What is your phone number?',
+          style: TextStyle(
+              color: Colors.black, fontSize: 24, fontWeight: FontWeight.bold),
+        ),
+        SizedBox(
+          height: 30,
+        ),
         Container(
           margin: EdgeInsets.symmetric(horizontal: 2),
-          child: Text("What Is Your Number",style: TextStyle(fontSize: 18,color: Colors.black)),
-        )
+          child: Text(
+            'Please enter yout phone number to verify your account.',
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 18,
+            ),
+          ),
+        ),
       ],
     );
   }
 
-  Widget biuldPhoneForm(){
+  Widget _buildPhoneFormField() {
     return Row(
       children: [
         Expanded(
           flex: 1,
           child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 8,vertical: 8),
+            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
             decoration: BoxDecoration(
-              border: Border.all(color: const Color(0xFFE5EFFD)),
-              borderRadius: BorderRadius.circular(10)
+              border: Border.all(color:chatBarMessage),
+              borderRadius: BorderRadius.all(Radius.circular(6)),
             ),
-            child: Text(biuldFlage()+" +20",style: TextStyle(fontSize: 20,letterSpacing: 2)),
-          )),
-          SizedBox(width: 16,),
-          Expanded(
+            child: Text(
+              generateCountryFlag() + ' +20',
+              style: TextStyle(fontSize: 18, letterSpacing: 2.0),
+            ),
+          ),
+        ),
+        SizedBox(
+          width: 16,
+        ),
+        Expanded(
           flex: 2,
           child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 12,vertical: 2),
             width: double.infinity,
+            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 2),
             decoration: BoxDecoration(
-              border: Border.all(color: MyColors.lightBlue),
-              borderRadius: BorderRadius.circular(10)
+              border: Border.all(color: chatBarMessage),
+              borderRadius: BorderRadius.all(Radius.circular(6)),
             ),
             child: TextFormField(
-              key: globalKey,
               autofocus: true,
               style: TextStyle(
                 fontSize: 18,
-                letterSpacing: 2
+                letterSpacing: 2.0,
               ),
-              decoration: InputDecoration(
-                border: InputBorder.none,
-                
-              ),
-              cursorColor:Colors.black,
-              keyboardType: TextInputType.number,
+              decoration: InputDecoration(border: InputBorder.none),
+              cursorColor: Colors.black,
+              keyboardType: TextInputType.phone,
               validator: (value) {
-                if(value!.isEmpty){
-                  return "please enter your number";
-                }if (value.length < 11) {
-                  return "please enter 11 number";
-                } 
+                if (value!.isEmpty) {
+                  return 'Please enter yout phone number!';
+                } else if (value.length < 11) {
+                  return 'Too short for a phone number!';
+                }
                 return null;
               },
-              onSaved: (newValue) {
-                phoneNumber.value=newValue.toString() as TextEditingValue;
+              onSaved: (value) {
+                phoneNumber = value!;
               },
-            )
-          )),
+            ),
+          ),
+        ),
       ],
     );
   }
 
-  String biuldFlage(){
-    String countryCode="eg";
-    String flage=countryCode.toUpperCase().replaceAllMapped(RegExp(r'[A-Z]'), (replace)=>String.fromCharCode(replace.group(0)!.codeUnitAt(0) +127397));
-    return flage;
+  String generateCountryFlag() {
+    String countryCode = 'eg';
+
+    String flag = countryCode.toUpperCase().replaceAllMapped(RegExp(r'[A-Z]'),
+        (match) => String.fromCharCode(match.group(0)!.codeUnitAt(0) + 127397));
+
+    return flag;
   }
 
-  Widget biuldTextButton(){
+  Future<void> _register(BuildContext context) async {
+    if (!_phoneFormKey.currentState!.validate()) {
+      Navigator.pop(context);
+      return;
+    } else {
+      Navigator.pop(context);
+      _phoneFormKey.currentState!.save();
+      BlocProvider.of<PhoneAuthCubit>(context).submitPhoneNumber(phoneNumber);
+    }
+  }
+
+  Widget _buildNextButton(BuildContext context) {
     return Align(
-      alignment: Alignment.bottomRight,
+      alignment: Alignment.centerRight,
       child: ElevatedButton(
-        
-        style: ElevatedButton.styleFrom(
-          minimumSize: Size(120, 50),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-          
+        onPressed: () {
+          showProgressIndicator(context);
+
+          _register(context);
+        },
+        child: Text(
+          'Next',
+          style: TextStyle(color: Colors.white, fontSize: 16),
         ),
-        onPressed: (){},
-         child: Text("Next",style: TextStyle(fontSize: 16,color: Colors.black),)),
-         
+        style: ElevatedButton.styleFrom(
+          minimumSize: Size(110, 50),
+          
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(6),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void showProgressIndicator(BuildContext context) {
+    AlertDialog alertDialog = AlertDialog(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      content: Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
+        ),
+      ),
+    );
+
+    showDialog(
+      barrierColor: Colors.white.withOpacity(0),
+      barrierDismissible: false,
+      context: context,
+      builder: (context) {
+        return alertDialog;
+      },
+    );
+  }
+
+  Widget _buildPhoneNumberSubmitedBloc() {
+    return BlocListener<PhoneAuthCubit, PhoneAuthState>(
+      listenWhen: (previous, current) {
+        return previous != current;
+      },
+      listener: (context, state) {
+        if (state is Loading) {
+          showProgressIndicator(context);
+        }
+
+        if (state is PhoneNumberSubmited) {
+          Navigator.pop(context);
+          Navigator.of(context).pushNamed(otpScrren, arguments: phoneNumber);
+        }
+       
+        
+
+        if (state is ErrorOccurred) {
+          Navigator.pop(context);
+          String errorMsg = (state).errorMsg;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMsg),
+              backgroundColor: Colors.black,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+      },
+      child: Container(),
     );
   }
 
@@ -100,19 +197,26 @@ class LoginPage extends StatelessWidget {
       child: Scaffold(
         backgroundColor: Colors.white,
         body: Form(
-          key: UniqueKey(),
-          child:Container(
-            margin: EdgeInsets.symmetric(horizontal: 30,vertical: 30),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+          key: _phoneFormKey,
+          child: Container(
+            margin: EdgeInsets.symmetric(horizontal: 32, vertical: 88),
+            child: ListView(
+              
               children: [
-                biuldHightText(),
-                SizedBox(height: 130,),
-                biuldPhoneForm(),
-                biuldTextButton()
+                _buildIntroTexts(),
+                SizedBox(
+                  height: 110,
+                ),
+                _buildPhoneFormField(),
+                SizedBox(
+                  height: 70,
+                ),
+                _buildNextButton(context),
+                _buildPhoneNumberSubmitedBloc(),
               ],
             ),
-          )),
+          ),
+        ),
       ),
     );
   }

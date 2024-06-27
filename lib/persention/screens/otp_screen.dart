@@ -1,133 +1,191 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:map/bussnis_logic/auth/cubit/authphone_cubit.dart';
 import 'package:map/const/colors.dart';
+import 'package:map/const/rout_name.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 
 class OtpScreen extends StatelessWidget {
-   OtpScreen({super.key});
+  final phoneNumber;
 
-   String phoneNumber="01030920974";
-   TextEditingController textEditingController=TextEditingController();
+  OtpScreen({Key? key, required this.phoneNumber}) : super(key: key);
 
-    Widget biuldHightText(){
+  late String otpCode;
+
+  Widget _buildIntroTexts() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("What Is Your Pin Code",style: TextStyle(fontSize: 20,color: Colors.black),),
-        SizedBox(height: 30,),
+        Text(
+          'Verify your phone number',
+          style: TextStyle(
+              color: Colors.black, fontSize: 24, fontWeight: FontWeight.bold),
+        ),
+        SizedBox(
+          height: 30,
+        ),
         Container(
           margin: EdgeInsets.symmetric(horizontal: 2),
           child: RichText(
-            text:TextSpan(
-              text: "Enter Your Code Number sent to ",
-              style: TextStyle(fontSize: 20,color: Colors.black),
-              children: <TextSpan>[TextSpan(text: "$phoneNumber",style: TextStyle(fontSize: 20,color:Colors.redAccent))]
-            )
-          )
-        )
+            text: TextSpan(
+              text: 'Enter your 6 digit code numbers sent to ',
+              style: TextStyle(color: Colors.black, fontSize: 18, height: 1.4),
+              children: <TextSpan>[
+                TextSpan(
+                  text: '$phoneNumber',
+                  style: TextStyle(color: Colors.blue),
+                ),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
 
-   Widget biuldTextButton(){
-    return Align(
-      alignment: Alignment.bottomRight,
-      child: ElevatedButton(
-        
-        style: ElevatedButton.styleFrom(
-          minimumSize: Size(120, 50),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-          
+  void showProgressIndicator(BuildContext context) {
+    AlertDialog alertDialog = AlertDialog(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      content: Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
         ),
-        onPressed: (){},
-         child: Text("Confirm",style: TextStyle(fontSize: 16,color: Colors.black),)),
-         
+      ),
+    );
+
+    showDialog(
+      barrierColor: Colors.white.withOpacity(0),
+      barrierDismissible: false,
+      context: context,
+      builder: (context) {
+        return alertDialog;
+      },
     );
   }
 
-  Widget biuldTextPinCode(BuildContext context){
+  Widget _buildPinCodeFields(BuildContext context) {
     return Container(
       child: PinCodeTextField(
-                    appContext: context,
-                    pastedTextStyle: TextStyle(
-                      color: Colors.green.shade600,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    length: 6,
-                    obscureText: true,
-                    obscuringCharacter: '*',
-                    obscuringWidget: const FlutterLogo(
-                      size: 24,
-                    ),
-                    blinkWhenObscuring: true,
-                    animationType: AnimationType.fade,
-                    validator: (v) {
-                      if (v!.length < 3) {
-                        return "I'm from validator";
-                      } else {
-                        return null;
-                      }
-                    },
-                    pinTheme: PinTheme(
-                      shape: PinCodeFieldShape.box,
-                      borderRadius: BorderRadius.circular(10),
-                      fieldHeight: 60,
-                      fieldWidth: 50,
-                      activeFillColor: Colors.white,
-                      inactiveColor: MyColors.lightBlue,
-                      inactiveFillColor: Colors.lightBlue,
-                      selectedFillColor: Colors.white
-                      
-                    ),
-                    cursorColor: Colors.black,
-                    animationDuration: const Duration(milliseconds: 300),
-                    enableActiveFill: true,
-                    
-                    controller: textEditingController,
-                    keyboardType: TextInputType.number,
-                    boxShadows: const [
-                      BoxShadow(
-                        offset: Offset(0, 1),
-                        color: Colors.black12,
-                        blurRadius: 10,
-                      )
-                    ],
-                    onCompleted: (v) {
-                      debugPrint("Completed");
-                    },
-                    // onTap: () {
-                    //   print("Pressed");
-                    // },
-                    onChanged: (value) {
-                     
-                    },
-                    beforeTextPaste: (text) {
-                      debugPrint("Allowing to paste $text");
-                      //if you return true then it will show the paste confirmation dialog. Otherwise if false, then nothing will happen.
-                      //but you can show anything you want here, like your pop up saying wrong paste format or etc
-                      return true;
-                    },
-                  ),
+        appContext: context,
+        autoFocus: true,
+        cursorColor: Colors.black,
+        keyboardType: TextInputType.number,
+        length: 6,
+        obscureText: false,
+        animationType: AnimationType.scale,
+        pinTheme: PinTheme(
+          shape: PinCodeFieldShape.box,
+          borderRadius: BorderRadius.circular(5),
+          fieldHeight: 50,
+          fieldWidth: 40,
+          borderWidth: 1,
+          activeColor: Colors.blue,
+          inactiveColor: Colors.blue,
+          inactiveFillColor: Colors.white,
+          activeFillColor: Colors.lightBlue,
+          selectedColor: Colors.blue,
+          selectedFillColor: Colors.white,
+        ),
+        animationDuration: Duration(milliseconds: 300),
+        backgroundColor: Colors.white,
+        enableActiveFill: true,
+        onCompleted: (submitedCode) {
+          otpCode = submitedCode;
+          print("Completed");
+        },
+        onChanged: (value) {
+          print(value);
+        },
+      ),
     );
   }
 
+  void _login(BuildContext context) {
+    BlocProvider.of<PhoneAuthCubit>(context).submitOTP(otpCode);
+  }
 
+  Widget _buildVrifyButton(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: ElevatedButton(
+        onPressed: () {
+          showProgressIndicator(context);
+
+          _login(context);
+        },
+        child: Text(
+          'Verify',
+          style: TextStyle(color: Colors.white, fontSize: 16),
+        ),
+        style: ElevatedButton.styleFrom(
+          minimumSize: Size(110, 50),
+          
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(6),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPhoneVerificationBloc() {
+    return BlocListener<PhoneAuthCubit, PhoneAuthState>(
+      listenWhen: (previous, current) {
+        return previous != current;
+      },
+      listener: (context, state) {
+        if (state is Loading) {
+          showProgressIndicator(context);
+        }
+
+        if (state is PhoneOTPVerified) {
+          Navigator.pop(context);
+          Navigator.of(context).pushReplacementNamed(personalInformations);
+        }
+        if (state is UserExist) {
+          Navigator.pop(context);
+          Navigator.of(context).pushReplacementNamed(home);
+        }
+
+        if (state is ErrorOccurred) {
+          //Navigator.pop(context);
+          String errorMsg = (state).errorMsg;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMsg),
+              backgroundColor: Colors.black,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+      },
+      child: Container(),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
         backgroundColor: Colors.white,
-        body:Container(
-          margin: EdgeInsets.symmetric(horizontal: 30,vertical: 30),
+        body: Container(
+          margin: EdgeInsets.symmetric(horizontal: 32, vertical: 88),
           child: ListView(
             children: [
-               biuldHightText(),
-               SizedBox(height: 80,),
-               biuldTextPinCode(context),
-               SizedBox(height: 60,),
-               biuldTextButton()
-
-          ],),
-        ) ,
+              _buildIntroTexts(),
+              SizedBox(
+                height: 88,
+              ),
+              _buildPinCodeFields(context),
+              SizedBox(
+                height: 60,
+              ),
+              _buildVrifyButton(context),
+              _buildPhoneVerificationBloc(),
+            ],
+          ),
+        ),
       ),
     );
   }
